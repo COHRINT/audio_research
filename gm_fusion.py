@@ -30,6 +30,7 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.image as mgimg
+import matplotlib.tri as tri
 import rospy
 from std_msgs.msg import Float64
 
@@ -69,8 +70,8 @@ class Bayesian:
 		obs_model = []
 		obs_model.append(GM())
 		for r in range(15):
-			x=robot_x+r*math.cos(math.radians(robot_theta+(360-bearing)+90))
-			y=robot_y+r*math.sin(math.radians(robot_theta+(360-bearing)+90))
+			x=robot_x+r*math.cos(math.radians(robot_theta+(bearing)+90))
+			y=robot_y+r*math.sin(math.radians(robot_theta+(bearing)+90))
 			scalar = math.sqrt(r)+1
 			obs_model[0].addNewG([x,y],[[scalar,0],[0,scalar]],scalar**3.2)
 		return obs_model
@@ -89,20 +90,43 @@ class Bayesian:
 		return post
 
 	def continue_plot(self,gm,robot_x,robot_y,robot_theta,bearing,t):
-		x,y,c=gm.plot2D(low=[-10,0],high=[10,10],vis=False)
+		x,y,c=gm.plot2D(low=[-10,-10],high=[10,10],vis=False)
 		self.ax.cla()
 		self.ax.contourf(x,y,c)
+		self.ax.set_xlim([-10,10])
+		self.ax.set_ylim([-10,10])
 		self.ax.set_title('time step='+str(t))
 		self.ax.set_xlabel('position (m)')
 		self.ax.set_ylabel('position (m)')
-		robot=self.ax.plot([robot_x], [robot_y], 'go')
-		r=1*np.random.randn()+6
-		other,=self.ax.plot([robot_x+r*math.cos(math.radians(robot_theta+(360-bearing)+90))],
-						[robot_y+r*math.sin(math.radians(robot_theta+(360-bearing)+90))],
-						'ro')
+		robot,=self.ax.plot([robot_x], [robot_y], 'go')
+		l=5
+		triang=tri.Triangulation([robot_x,robot_x+l*math.cos(-0.261799+math.radians(
+			robot_theta+(bearing)+90)),robot_x+l*math.cos(0.261799+math.radians(
+			robot_theta+(bearing)+90))],[robot_y,robot_y+l*math.sin(-0.261799+
+			math.radians(robot_theta+(bearing)+90)),robot_y+l*math.sin(0.261799+
+			math.radians(robot_theta+(bearing)+90))])
+		# self.ax.arrow(robot_x,robot_y,robot_x+l*math.cos(math.radians(robot_theta+
+		# 	(bearing)+90)),robot_y+l*math.sin(math.radians(robot_theta+(bearing)+90)))
+		self.ax.tricontourf(triang,[2,1,1],cmap="inferno",alpha=0.5)
+		# r=1*np.random.randn()+6
+		# other,=self.ax.plot([robot_x+r*math.cos(math.radians(robot_theta+(bearing)+90))],
+		# 				[robot_y+r*math.sin(math.radians(robot_theta+(bearing)+90))],
+		# 				'ro')
 		self.fig.savefig('../tmp/img'+str(t)+".png",bbox_inches='tight',pad_inches=0)
 		plt.pause(.5)
-		other.remove()
+		# other.remove()
+
+def save_annimation(counter):
+	fig,ax=plt.subplots()
+	images=[]
+	for k in range(1,counter):
+		fname='../tmp/img%d.png' %k
+		img=mgimg.imread(fname)
+		imgplot=plt.imshow(img)
+		plt.axis('off')
+		images.append([imgplot])
+	ani=animation.ArtistAnimation(fig,images,interval=20)
+	ani.save("../animation.gif",fps=1,writer='animation.writer')
 
 def listner():
 	rospy.init_node('listner',anonymous=True)
@@ -129,7 +153,8 @@ if __name__ == '__main__':
 	belief=GM()
 	belief.addNewG([0,3],[[5,0],[0,5]],1)
 	counter=1
-	# belief.plot2D(low=[-10,0],high=[10,10],xlabel='x position (m)',ylabel='y position (m)')
+	# b=belief.findMAPN()
+	belief.plot2D(low=[-10,0],high=[10,10],xlabel='x position (m)',ylabel='y position (m)',vis=False)
 	a.continue_plot(belief,robot_position[0],robot_position[1],robot_position[2],int(round(theta)),counter)
 	counter=counter+1
 	while (counter < 10):
@@ -138,13 +163,4 @@ if __name__ == '__main__':
 		a.continue_plot(belief,robot_position[0],robot_position[1],robot_position[2],int(round(theta)),counter)
 		counter=counter+1
 
-	fig,ax=plt.subplots()
-	images=[]
-	for k in range(1,counter):
-		fname='../tmp/img%d.png' %k
-		img=mgimg.imread(fname)
-		imgplot=plt.imshow(img)
-		plt.axis('off')
-		images.append([imgplot])
-	ani=animation.ArtistAnimation(fig,images,interval=20)
-	ani.save("../animation.gif",fps=1,writer='animation.writer')
+	# save_annimation(counter)

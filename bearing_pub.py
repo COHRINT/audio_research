@@ -13,7 +13,7 @@ class Respeaker(object):
 
         # Set up the HID driver
         self.dev = hid.device()
-        self.dev.open(RESPEAKER_VENDOR_ID, RESPEAKER_PRODUCT_ID)
+        # self.dev.open(RESPEAKER_VENDOR_ID, RESPEAKER_PRODUCT_ID)
 
     # Write data to a register, return how many bytes were written
     def write_register(self, register, data):
@@ -56,7 +56,7 @@ def angle(array=False):
     if (array==False):
         while not rospy.is_shutdown():
             sigma = 25
-            theta = -25
+            theta = 0
             theta_prime = sigma * np.random.randn() + theta
             bearing_out = float(theta_prime)
             rospy.loginfo(bearing_out)
@@ -75,6 +75,6 @@ def angle(array=False):
 if __name__ == '__main__':
     mic_array=Respeaker()
     try:
-        angle(array=True)
+        angle(array=False)
     except rospy.ROSInterruptException:
         pass
