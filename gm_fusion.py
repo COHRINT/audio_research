@@ -42,7 +42,7 @@ class Bayesian:
 
 	def belief_update(self,prior,robot_x,robot_y,robot_theta,bearing):
 		post=GM()
-		obs_model=self.observation_model(robot_x,robot_y,robot_theta,theta)
+		obs_model=self.observation_model(robot_x,robot_y,robot_theta,bearing)
 		# x,y,c=obs_model[0].plot2D(low = [-10,0],high = [10,10],xlabel='x position (m)',ylabel='y position (m)',vis=False)
 		# plt.contourf(x,y,c,cmap='inferno')
 		# plt.show()
