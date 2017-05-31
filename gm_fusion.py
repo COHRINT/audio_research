@@ -92,7 +92,7 @@ class Bayesian:
 	def continue_plot(self,gm,robot_x,robot_y,robot_theta,bearing,t):
 		x,y,c=gm.plot2D(low=[-10,-10],high=[10,10],vis=False)
 		self.ax.cla()
-		self.ax.contourf(x,y,c)
+		self.ax.contourf(x,y,c,cmap="viridis")
 		self.ax.set_xlim([-10,10])
 		self.ax.set_ylim([-10,10])
 		self.ax.set_title('time step='+str(t))
